@@ -393,7 +393,7 @@
       if (s.sort)     document.getElementById('sort').value    = s.sort;
       if (s.stars)    document.getElementById('stars').value   = s.stars;
       // Default SBA to on unless user has explicitly saved a preference
-      setChk('sba',       stored ? !!s.sba      : true);
+      setChk('sba',       !!s.sba);
       setChk('prime',     !!s.prime);
       setChk('free-ship', !!s.freeShip);
     } catch(e) {}
