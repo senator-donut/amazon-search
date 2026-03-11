@@ -36,35 +36,42 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 32px 16px;
+      padding: 40px 16px;
     }
 
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+      padding: 28px;
       width: 100%;
       max-width: 560px;
     }
 
+    @media (prefers-color-scheme: dark) {
+      .card { box-shadow: 0 2px 12px rgba(0,0,0,.3); }
+    }
+
     h1 {
-      font-size: 20px;
+      font-size: 17px;
       font-weight: 700;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       display: flex;
       align-items: center;
       gap: 8px;
+      letter-spacing: -.01em;
+      color: var(--text);
     }
 
     h1 span.logo {
       background: var(--accent);
       color: white;
-      font-size: 13px;
-      font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 4px;
-      letter-spacing: .03em;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 5px;
+      letter-spacing: .04em;
     }
 
     .search-row {
@@ -79,13 +86,22 @@
       border-radius: var(--radius);
       color: var(--text);
       font-size: 14px;
-      padding: 8px 10px;
+      padding: 9px 11px;
       width: 100%;
       outline: none;
-      transition: border-color .15s;
+      transition: border-color .15s, box-shadow .15s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
     }
     input[type="text"]:focus, input[type="number"]:focus, select:focus {
       border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(228,121,17,.12);
     }
 
     .go-btn {
@@ -94,14 +110,18 @@
       border-radius: var(--radius);
       color: white;
       cursor: pointer;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
-      padding: 8px 20px;
+      padding: 9px 22px;
       white-space: nowrap;
-      transition: background .15s;
+      transition: background .15s, box-shadow .15s;
       flex-shrink: 0;
+      letter-spacing: .02em;
     }
-    .go-btn:hover { background: var(--accent-h); }
+    .go-btn:hover {
+      background: var(--accent-h);
+      box-shadow: 0 2px 8px rgba(228,121,17,.35);
+    }
 
     /* Search history */
     #history-row {
@@ -192,15 +212,15 @@
     .toggle {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       background: var(--bg);
       border: 1px solid var(--border);
       border-radius: 20px;
       cursor: pointer;
       font-size: 13px;
-      padding: 6px 12px;
+      padding: 6px 13px;
       user-select: none;
-      transition: border-color .15s, background .15s;
+      transition: border-color .15s, background .15s, color .15s;
     }
     .toggle input { display: none; }
     .toggle.active {
@@ -223,25 +243,26 @@
       font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: .05em;
+      letter-spacing: .06em;
       color: var(--muted);
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
     .shortcuts {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 7px;
     }
 
     .shortcut-btn {
-      background: none;
+      background: var(--bg);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      color: var(--text);
+      border-radius: 20px;
+      color: var(--muted);
       cursor: pointer;
-      font-size: 13px;
-      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 13px;
       transition: border-color .15s, color .15s;
     }
     .shortcut-btn:hover {
@@ -250,9 +271,10 @@
     }
 
     footer {
-      margin-top: 24px;
-      font-size: 12px;
+      margin-top: 28px;
+      font-size: 11px;
       color: var(--muted);
+      letter-spacing: .02em;
     }
   </style>
 </head>
