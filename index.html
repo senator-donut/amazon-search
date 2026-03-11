@@ -70,7 +70,7 @@
     .search-row {
       display: flex;
       gap: 8px;
-      margin-bottom: 20px;
+      margin-bottom: 8px;
     }
 
     input[type="text"], input[type="number"], select {
@@ -102,6 +102,60 @@
       flex-shrink: 0;
     }
     .go-btn:hover { background: var(--accent-h); }
+
+    /* Search history */
+    #history-row {
+      display: none;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 16px;
+      min-height: 28px;
+    }
+    #history-row.visible { display: flex; }
+
+    .hist-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 12px;
+      padding: 3px 8px 3px 10px;
+      cursor: pointer;
+      transition: border-color .15s;
+      max-width: 160px;
+    }
+    .hist-chip:hover { border-color: var(--accent); color: var(--accent); }
+    .hist-chip span.label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .hist-chip button {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      padding: 0;
+      flex-shrink: 0;
+    }
+    .hist-chip button:hover { color: var(--text); }
+
+    .hist-clear {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 11px;
+      padding: 0;
+      margin-left: 2px;
+      text-decoration: underline;
+    }
+    .hist-clear:hover { color: var(--text); }
 
     .grid {
       display: grid;
@@ -165,6 +219,15 @@
       margin: 20px 0;
     }
 
+    .shortcuts-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
     .shortcuts {
       display: flex;
       flex-wrap: wrap;
@@ -202,6 +265,8 @@
     <input type="text" id="q" placeholder="Search Amazon…" autocomplete="off" autofocus>
     <button class="go-btn" onclick="go()">GO →</button>
   </div>
+
+  <div id="history-row"></div>
 
   <div class="grid">
     <label class="field">
@@ -266,40 +331,44 @@
 
   <hr class="divider">
 
+  <div class="shortcuts-label">Shortcuts</div>
   <div class="shortcuts">
     <button class="shortcut-btn" onclick="goDeals()">Today's Deals</button>
     <button class="shortcut-btn" onclick="goDiscount()">All Discounts</button>
     <button class="shortcut-btn" onclick="goSbaDeals()">SBA + Deals</button>
+    <button class="shortcut-btn" onclick="goWarehouse()">Warehouse</button>
+    <button class="shortcut-btn" onclick="goRenewed()">Renewed</button>
   </div>
 </div>
 
 <footer>senator-donut.github.io</footer>
 
 <script>
-  // Merchant IDs for "Sold by Amazon" per locale
   var SBA = {
     'com':   'ATVPDKIKX0DER',
     'ca':    'A3DWYIK6Y9EEQB',
     'co.uk': 'A3P5ROKL5A1OLE',
   };
 
-  // Prime eligible rh values per locale
   var PRIME = {
     'com':   '2470955011',
     'ca':    '6205626011',
     'co.uk': '2472432031',
   };
 
-  // 4+ and 3+ star rh values (US only; applied on .com, skipped on others)
   var STARS = {
     '4': '1248879011',
     '3': '1248882011',
   };
 
+  var HISTORY_MAX = 8;
+
+  // --- URL builder ---
+
   function buildUrl(opts) {
     var country  = opts.country  || val('country');
-    var keyword  = opts.keyword  !== undefined ? opts.keyword : val('q');
-    var sort     = opts.sort     !== undefined ? opts.sort    : val('sort');
+    var keyword  = opts.keyword  !== undefined ? opts.keyword  : val('q');
+    var sort     = opts.sort     !== undefined ? opts.sort     : val('sort');
     var minPrice = opts.minPrice !== undefined ? opts.minPrice : val('min-price');
     var maxPrice = opts.maxPrice !== undefined ? opts.maxPrice : val('max-price');
     var sba      = opts.sba      !== undefined ? opts.sba      : chk('sba');
@@ -317,31 +386,33 @@
     if (maxPrice) params.set('high-price', maxPrice);
 
     var rh = [];
-    if (sba)                             rh.push('p_6:'  + SBA[country]);
-    if (prime && PRIME[country])         rh.push('p_85:' + PRIME[country]);
-    if (freeShip)                        rh.push('p_76:1249');
+    if (sba)                                        rh.push('p_6:'  + SBA[country]);
+    if (prime && PRIME[country])                    rh.push('p_85:' + PRIME[country]);
+    if (freeShip)                                   rh.push('p_76:1249');
     if (stars && country === 'com' && STARS[stars]) rh.push('p_72:' + STARS[stars]);
-    if (brand)                           rh.push('p_89:' + brand);
+    if (brand)                                      rh.push('p_89:' + brand);
     if (rh.length) params.set('rh', rh.join(','));
 
     return base + '?' + params.toString();
   }
 
+  // --- Search actions ---
+
   function go() {
+    var k = val('q');
     window.open(buildUrl({}), '_blank');
-    save();
+    saveSettings();
+    if (k) addHistory(k);
   }
 
   function goDeals() {
     var country = val('country');
     var k = val('q');
-    var url = 'https://www.amazon.' + country + '/deals' + (k ? '?k=' + encodeURIComponent(k) : '');
-    window.open(url, '_blank');
+    window.open('https://www.amazon.' + country + '/deals' + (k ? '?k=' + encodeURIComponent(k) : ''), '_blank');
   }
 
   function goDiscount() {
     var url = buildUrl({ sort: 'price-asc-rank' });
-    // append deals filter
     url += '&deals-widget=%7B%22version%22%3A1%2C%22viewIndex%22%3A0%2C%22presetId%22%3A%22deals-collection-all-discounts%22%7D';
     window.open(url, '_blank');
   }
@@ -352,29 +423,93 @@
     var params = new URLSearchParams();
     if (k) params.set('k', k);
     params.set('rh', 'p_6:' + SBA[country]);
-    var url = 'https://www.amazon.' + country + '/deals?' + params.toString();
-    window.open(url, '_blank');
+    window.open('https://www.amazon.' + country + '/deals?' + params.toString(), '_blank');
   }
 
-  // Helpers
-  function val(id) { return document.getElementById(id).value.trim(); }
-  function chk(id) { return document.getElementById(id).checked; }
+  function goWarehouse() {
+    var country = val('country');
+    var k = val('q');
+    var params = new URLSearchParams();
+    if (k) params.set('k', k);
+    params.set('i', 'warehouse-deals');
+    var sort = val('sort');
+    if (sort) params.set('s', sort);
+    window.open('https://www.amazon.' + country + '/s?' + params.toString(), '_blank');
+  }
 
-  // Toggle pill styling
-  document.querySelectorAll('.toggle input').forEach(function(cb) {
-    cb.addEventListener('change', function() {
-      this.closest('.toggle').classList.toggle('active', this.checked);
-      save();
+  function goRenewed() {
+    var country = val('country');
+    var k = val('q');
+    var params = new URLSearchParams();
+    if (k) params.set('k', k);
+    var sort = val('sort');
+    if (sort) params.set('s', sort);
+    window.open('https://www.amazon.' + country + '/renewed?' + params.toString(), '_blank');
+  }
+
+  // --- Search history ---
+
+  function loadHistory() {
+    try { return JSON.parse(localStorage.getItem('amzh') || '[]'); } catch(e) { return []; }
+  }
+
+  function addHistory(term) {
+    var h = loadHistory().filter(function(t) { return t !== term; });
+    h.unshift(term);
+    if (h.length > HISTORY_MAX) h = h.slice(0, HISTORY_MAX);
+    localStorage.setItem('amzh', JSON.stringify(h));
+    renderHistory();
+  }
+
+  function removeHistory(term) {
+    var h = loadHistory().filter(function(t) { return t !== term; });
+    localStorage.setItem('amzh', JSON.stringify(h));
+    renderHistory();
+  }
+
+  function renderHistory() {
+    var h   = loadHistory();
+    var row = document.getElementById('history-row');
+    row.innerHTML = '';
+    if (!h.length) { row.classList.remove('visible'); return; }
+
+    h.forEach(function(term) {
+      var chip = document.createElement('div');
+      chip.className = 'hist-chip';
+
+      var label = document.createElement('span');
+      label.className = 'label';
+      label.textContent = term;
+      label.title = term;
+      label.onclick = function() {
+        document.getElementById('q').value = term;
+        go();
+      };
+
+      var del = document.createElement('button');
+      del.textContent = '×';
+      del.title = 'Remove';
+      del.onclick = function(e) { e.stopPropagation(); removeHistory(term); };
+
+      chip.appendChild(label);
+      chip.appendChild(del);
+      row.appendChild(chip);
     });
-  });
 
-  // Enter key to search
-  document.getElementById('q').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') go();
-  });
+    var clear = document.createElement('button');
+    clear.className = 'hist-clear';
+    clear.textContent = 'clear all';
+    clear.onclick = function() {
+      localStorage.removeItem('amzh');
+      renderHistory();
+    };
+    row.appendChild(clear);
+    row.classList.add('visible');
+  }
 
-  // Auto-save/restore settings
-  function save() {
+  // --- Settings persist ---
+
+  function saveSettings() {
     localStorage.setItem('amzs', JSON.stringify({
       country:  val('country'),
       sort:     val('sort'),
@@ -385,32 +520,48 @@
     }));
   }
 
-  function restore() {
+  function restoreSettings() {
     try {
-      var stored = localStorage.getItem('amzs');
-      var s = JSON.parse(stored || '{}');
-      if (s.country)  document.getElementById('country').value = s.country;
-      if (s.sort)     document.getElementById('sort').value    = s.sort;
-      if (s.stars)    document.getElementById('stars').value   = s.stars;
-      // Default SBA to on unless user has explicitly saved a preference
+      var s = JSON.parse(localStorage.getItem('amzs') || '{}');
+      if (s.country) document.getElementById('country').value = s.country;
+      if (s.sort)    document.getElementById('sort').value    = s.sort;
+      if (s.stars)   document.getElementById('stars').value   = s.stars;
       setChk('sba',       !!s.sba);
       setChk('prime',     !!s.prime);
       setChk('free-ship', !!s.freeShip);
     } catch(e) {}
   }
 
-  function setChk(id, val) {
+  // --- Helpers ---
+
+  function val(id) { return document.getElementById(id).value.trim(); }
+  function chk(id) { return document.getElementById(id).checked; }
+
+  function setChk(id, v) {
     var cb = document.getElementById(id);
-    cb.checked = val;
-    cb.closest('.toggle').classList.toggle('active', val);
+    cb.checked = v;
+    cb.closest('.toggle').classList.toggle('active', v);
   }
 
-  // Save on select changes too
-  ['country','sort','stars'].forEach(function(id) {
-    document.getElementById(id).addEventListener('change', save);
+  // Toggle pill styling + autosave
+  document.querySelectorAll('.toggle input').forEach(function(cb) {
+    cb.addEventListener('change', function() {
+      this.closest('.toggle').classList.toggle('active', this.checked);
+      saveSettings();
+    });
   });
 
-  restore();
+  ['country','sort','stars'].forEach(function(id) {
+    document.getElementById(id).addEventListener('change', saveSettings);
+  });
+
+  document.getElementById('q').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') go();
+  });
+
+  // Init
+  restoreSettings();
+  renderHistory();
 </script>
 </body>
 </html>
