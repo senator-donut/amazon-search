@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amazon Search</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #f8f8f8;
+      --surface:  #ffffff;
+      --border:   #e0e0e0;
+      --text:     #111111;
+      --muted:    #666666;
+      --accent:   #e47911;
+      --accent-h: #c96c00;
+      --radius:   6px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:      #1a1a1a;
+        --surface: #242424;
+        --border:  #3a3a3a;
+        --text:    #eeeeee;
+        --muted:   #999999;
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      width: 100%;
+      max-width: 560px;
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h1 span.logo {
+      background: var(--accent);
+      color: white;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      letter-spacing: .03em;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"], input[type="number"], select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 14px;
+      padding: 8px 10px;
+      width: 100%;
+      outline: none;
+      transition: border-color .15s;
+    }
+    input[type="text"]:focus, input[type="number"]:focus, select:focus {
+      border-color: var(--accent);
+    }
+
+    .go-btn {
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius);
+      color: white;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 8px 20px;
+      white-space: nowrap;
+      transition: background .15s;
+      flex-shrink: 0;
+    }
+    .go-btn:hover { background: var(--accent-h); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 16px;
+      margin-bottom: 20px;
+    }
+
+    label.field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .price-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .price-row span { color: var(--muted); font-size: 13px; }
+
+    .toggles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 13px;
+      padding: 6px 12px;
+      user-select: none;
+      transition: border-color .15s, background .15s;
+    }
+    .toggle input { display: none; }
+    .toggle.active {
+      background: #fff4e6;
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    @media (prefers-color-scheme: dark) {
+      .toggle.active { background: #3a2400; }
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 20px 0;
+    }
+
+    .shortcuts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .shortcut-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 13px;
+      padding: 6px 12px;
+      transition: border-color .15s, color .15s;
+    }
+    .shortcut-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    footer {
+      margin-top: 24px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h1><span class="logo">a</span> Amazon Search</h1>
+
+  <div class="search-row">
+    <input type="text" id="q" placeholder="Search Amazon…" autocomplete="off" autofocus>
+    <button class="go-btn" onclick="go()">GO →</button>
+  </div>
+
+  <div class="grid">
+    <label class="field">
+      Site
+      <select id="country">
+        <option value="com">Amazon.com (US)</option>
+        <option value="ca">Amazon.ca (CA)</option>
+        <option value="co.uk">Amazon.co.uk (UK)</option>
+      </select>
+    </label>
+
+    <label class="field">
+      Sort By
+      <select id="sort">
+        <option value="">Featured</option>
+        <option value="price-asc-rank">Price: Low → High</option>
+        <option value="price-desc-rank">Price: High → Low</option>
+        <option value="review-rank">Avg. Customer Review</option>
+        <option value="date-desc-rank">Newest Arrivals</option>
+        <option value="exact-aware-popularity-rank">Best Sellers</option>
+      </select>
+    </label>
+
+    <label class="field">
+      Min Stars
+      <select id="stars">
+        <option value="">Any</option>
+        <option value="4">4+ ★★★★</option>
+        <option value="3">3+ ★★★</option>
+      </select>
+    </label>
+
+    <label class="field">
+      Price Range
+      <div class="price-row">
+        <input type="number" id="min-price" placeholder="Min" min="0">
+        <span>–</span>
+        <input type="number" id="max-price" placeholder="Max" min="0">
+      </div>
+    </label>
+  </div>
+
+  <div class="toggles">
+    <label class="toggle" id="t-sba">
+      <input type="checkbox" id="sba">
+      Sold by Amazon
+    </label>
+    <label class="toggle" id="t-prime">
+      <input type="checkbox" id="prime">
+      Prime
+    </label>
+    <label class="toggle" id="t-ship">
+      <input type="checkbox" id="free-ship">
+      Free Shipping
+    </label>
+  </div>
+
+  <hr class="divider">
+
+  <div class="shortcuts">
+    <button class="shortcut-btn" onclick="goDeals()">Today's Deals</button>
+    <button class="shortcut-btn" onclick="goDiscount()">All Discounts</button>
+    <button class="shortcut-btn" onclick="goSbaDeals()">SBA + Deals</button>
+  </div>
+</div>
+
+<footer>senator-donut.github.io</footer>
+
+<script>
+  // Merchant IDs for "Sold by Amazon" per locale
+  var SBA = {
+    'com':   'ATVPDKIKX0DER',
+    'ca':    'A3DWYIK6Y9EEQB',
+    'co.uk': 'A3P5ROKL5A1OLE',
+  };
+
+  // Prime eligible rh values per locale
+  var PRIME = {
+    'com':   '2470955011',
+    'ca':    '6205626011',
+    'co.uk': '2472432031',
+  };
+
+  // 4+ and 3+ star rh values (US only; applied on .com, skipped on others)
+  var STARS = {
+    '4': '1248879011',
+    '3': '1248882011',
+  };
+
+  function buildUrl(opts) {
+    var country  = opts.country  || val('country');
+    var keyword  = opts.keyword  !== undefined ? opts.keyword : val('q');
+    var sort     = opts.sort     !== undefined ? opts.sort    : val('sort');
+    var minPrice = opts.minPrice !== undefined ? opts.minPrice : val('min-price');
+    var maxPrice = opts.maxPrice !== undefined ? opts.maxPrice : val('max-price');
+    var sba      = opts.sba      !== undefined ? opts.sba      : chk('sba');
+    var prime    = opts.prime    !== undefined ? opts.prime    : chk('prime');
+    var freeShip = opts.freeShip !== undefined ? opts.freeShip : chk('free-ship');
+    var stars    = opts.stars    !== undefined ? opts.stars    : val('stars');
+
+    var base   = 'https://www.amazon.' + country + '/s';
+    var params = new URLSearchParams();
+
+    if (keyword)  params.set('k', keyword);
+    if (sort)     params.set('s', sort);
+    if (minPrice) params.set('low-price',  minPrice);
+    if (maxPrice) params.set('high-price', maxPrice);
+
+    var rh = [];
+    if (sba)                             rh.push('p_6:'  + SBA[country]);
+    if (prime && PRIME[country])         rh.push('p_85:' + PRIME[country]);
+    if (freeShip)                        rh.push('p_76:1249');
+    if (stars && country === 'com' && STARS[stars]) rh.push('p_72:' + STARS[stars]);
+    if (rh.length) params.set('rh', rh.join(','));
+
+    return base + '?' + params.toString();
+  }
+
+  function go() {
+    window.open(buildUrl({}), '_blank');
+    save();
+  }
+
+  function goDeals() {
+    var country = val('country');
+    var k = val('q');
+    var url = 'https://www.amazon.' + country + '/deals' + (k ? '?k=' + encodeURIComponent(k) : '');
+    window.open(url, '_blank');
+  }
+
+  function goDiscount() {
+    var url = buildUrl({ sort: 'price-asc-rank' });
+    // append deals filter
+    url += '&deals-widget=%7B%22version%22%3A1%2C%22viewIndex%22%3A0%2C%22presetId%22%3A%22deals-collection-all-discounts%22%7D';
+    window.open(url, '_blank');
+  }
+
+  function goSbaDeals() {
+    var country = val('country');
+    var k = val('q');
+    var params = new URLSearchParams();
+    if (k) params.set('k', k);
+    params.set('rh', 'p_6:' + SBA[country]);
+    var url = 'https://www.amazon.' + country + '/deals?' + params.toString();
+    window.open(url, '_blank');
+  }
+
+  // Helpers
+  function val(id) { return document.getElementById(id).value.trim(); }
+  function chk(id) { return document.getElementById(id).checked; }
+
+  // Toggle pill styling
+  document.querySelectorAll('.toggle input').forEach(function(cb) {
+    cb.addEventListener('change', function() {
+      this.closest('.toggle').classList.toggle('active', this.checked);
+      save();
+    });
+  });
+
+  // Enter key to search
+  document.getElementById('q').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') go();
+  });
+
+  // Auto-save/restore settings
+  function save() {
+    localStorage.setItem('amzs', JSON.stringify({
+      country:  val('country'),
+      sort:     val('sort'),
+      stars:    val('stars'),
+      sba:      chk('sba'),
+      prime:    chk('prime'),
+      freeShip: chk('free-ship'),
+    }));
+  }
+
+  function restore() {
+    try {
+      var s = JSON.parse(localStorage.getItem('amzs') || '{}');
+      if (s.country)  document.getElementById('country').value    = s.country;
+      if (s.sort)     document.getElementById('sort').value       = s.sort;
+      if (s.stars)    document.getElementById('stars').value      = s.stars;
+      if (s.sba)      setChk('sba', true);
+      if (s.prime)    setChk('prime', true);
+      if (s.freeShip) setChk('free-ship', true);
+    } catch(e) {}
+  }
+
+  function setChk(id, val) {
+    var cb = document.getElementById(id);
+    cb.checked = val;
+    cb.closest('.toggle').classList.toggle('active', val);
+  }
+
+  // Save on select changes too
+  ['country','sort','stars'].forEach(function(id) {
+    document.getElementById(id).addEventListener('change', save);
+  });
+
+  restore();
+</script>
+</body>
+</html>
