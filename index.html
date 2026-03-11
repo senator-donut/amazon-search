@@ -242,6 +242,11 @@
         <input type="number" id="max-price" placeholder="Max" min="0">
       </div>
     </label>
+
+    <label class="field" style="grid-column: span 2">
+      Brand
+      <input type="text" id="brand" placeholder="e.g. Sony, Nike, YETI…" autocomplete="off">
+    </label>
   </div>
 
   <div class="toggles">
@@ -301,6 +306,7 @@
     var prime    = opts.prime    !== undefined ? opts.prime    : chk('prime');
     var freeShip = opts.freeShip !== undefined ? opts.freeShip : chk('free-ship');
     var stars    = opts.stars    !== undefined ? opts.stars    : val('stars');
+    var brand    = opts.brand    !== undefined ? opts.brand    : val('brand');
 
     var base   = 'https://www.amazon.' + country + '/s';
     var params = new URLSearchParams();
@@ -315,6 +321,7 @@
     if (prime && PRIME[country])         rh.push('p_85:' + PRIME[country]);
     if (freeShip)                        rh.push('p_76:1249');
     if (stars && country === 'com' && STARS[stars]) rh.push('p_72:' + STARS[stars]);
+    if (brand)                           rh.push('p_89:' + brand);
     if (rh.length) params.set('rh', rh.join(','));
 
     return base + '?' + params.toString();
@@ -380,13 +387,15 @@
 
   function restore() {
     try {
-      var s = JSON.parse(localStorage.getItem('amzs') || '{}');
-      if (s.country)  document.getElementById('country').value    = s.country;
-      if (s.sort)     document.getElementById('sort').value       = s.sort;
-      if (s.stars)    document.getElementById('stars').value      = s.stars;
-      if (s.sba)      setChk('sba', true);
-      if (s.prime)    setChk('prime', true);
-      if (s.freeShip) setChk('free-ship', true);
+      var stored = localStorage.getItem('amzs');
+      var s = JSON.parse(stored || '{}');
+      if (s.country)  document.getElementById('country').value = s.country;
+      if (s.sort)     document.getElementById('sort').value    = s.sort;
+      if (s.stars)    document.getElementById('stars').value   = s.stars;
+      // Default SBA to on unless user has explicitly saved a preference
+      setChk('sba',       stored ? !!s.sba      : true);
+      setChk('prime',     !!s.prime);
+      setChk('free-ship', !!s.freeShip);
     } catch(e) {}
   }
 
