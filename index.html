@@ -250,8 +250,8 @@
 
     .shortcuts {
       display: flex;
-      flex-wrap: nowrap;
-      gap: 6px;
+      flex-wrap: wrap;
+      gap: 7px;
     }
 
     .shortcut-btn {
@@ -262,9 +262,14 @@
       cursor: pointer;
       font-size: 12px;
       font-weight: 500;
-      padding: 5px 10px;
+      padding: 5px 13px;
       transition: border-color .15s, color .15s;
       white-space: nowrap;
+    }
+
+    .shortcut-group {
+      display: flex;
+      gap: 7px;
     }
     .shortcut-btn:hover {
       border-color: var(--accent);
@@ -359,8 +364,10 @@
     <button class="shortcut-btn" onclick="goDeals()">Today's Deals</button>
     <button class="shortcut-btn" onclick="goDiscount()">All Discounts</button>
     <button class="shortcut-btn" onclick="goSbaDeals()">SBA + Deals</button>
-    <button class="shortcut-btn" onclick="goWarehouse()">Warehouse</button>
-    <button class="shortcut-btn" onclick="goRenewed()">Renewed</button>
+    <div class="shortcut-group">
+      <button class="shortcut-btn" onclick="goWarehouse()">Warehouse</button>
+      <button class="shortcut-btn" onclick="goRenewed()">Renewed</button>
+    </div>
   </div>
 </div>
 
