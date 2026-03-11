@@ -250,8 +250,8 @@
 
     .shortcuts {
       display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
+      flex-wrap: nowrap;
+      gap: 6px;
     }
 
     .shortcut-btn {
@@ -262,8 +262,9 @@
       cursor: pointer;
       font-size: 12px;
       font-weight: 500;
-      padding: 5px 13px;
+      padding: 5px 10px;
       transition: border-color .15s, color .15s;
+      white-space: nowrap;
     }
     .shortcut-btn:hover {
       border-color: var(--accent);
